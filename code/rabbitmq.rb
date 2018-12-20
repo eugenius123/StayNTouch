@@ -10,6 +10,26 @@ class Rabbitmq
   #
   # Source (https://www.rabbitmq.com/getstarted.html, http://rubybunny.info/articles/getting_started.html)
   #
+  
+  # simple pub/sub implementation within rabbitmq that showcases a simple method that subscribes to a queue,
+  # publish the guest to the queue and returns the answer
   def self.reservation_pub_sub(guest)
+    conn = Bunny.new
+    conn.start
+
+    ch = conn.create_channel
+    q  = ch.queue("guest_queue", :auto_delete => true)
+    x  = ch.default_exchange
+
+    x.publish(guest, :routing_key => "guest_queue")
+    answer = ""
+    q.subscribe do |delivery_info, metadata, payload|
+      answer = "Received #{payload}'s Reservation"
+    end
+    
+    sleep 1.0
+    conn.close
+    return answer
+
   end
 end
